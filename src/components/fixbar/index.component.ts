@@ -2,13 +2,7 @@
 // Copyright @ 2018-present xiejiahe. All rights reserved.
 // See https://github.com/xjh22222228/nav
 
-import {
-  Component,
-  Output,
-  EventEmitter,
-  Input,
-  ChangeDetectionStrategy,
-} from '@angular/core'
+import { Component, Output, EventEmitter, Input } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { isDark as isDarkFn, randomBgImg, queryString } from 'src/utils'
 import { NzModalService } from 'ng-zorro-antd/modal'
@@ -19,7 +13,7 @@ import { websiteList, settings } from 'src/store'
 import { DB_PATH, STORAGE_KEY_MAP } from 'src/constants'
 import { Router, ActivatedRoute } from '@angular/router'
 import { $t, getLocale } from 'src/locale'
-import { addDark, removeDark } from 'src/utils/util'
+import { addDark, removeDark } from 'src/utils/utils'
 import { NzDropDownModule } from 'ng-zorro-antd/dropdown'
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip'
 import mitt from 'src/utils/mitt'
@@ -30,7 +24,6 @@ import mitt from 'src/utils/mitt'
   selector: 'app-fixbar',
   templateUrl: './index.component.html',
   styleUrls: ['./index.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [NzModalService, NzMessageService],
 })
 export class FixbarComponent {
@@ -40,13 +33,15 @@ export class FixbarComponent {
   @Input() selector: string = ''
   @Output() onCollapse = new EventEmitter()
 
-  $t = $t
-  settings = settings
-  language = getLocale()
-  websiteList = websiteList
+  readonly $t = $t
+  readonly settings = settings
+  readonly language = getLocale()
+  readonly isLogin = isLogin
   isDark: boolean = isDarkFn()
+  websiteList = websiteList
   syncLoading = false
-  isLogin = isLogin
+  isShowFace = true
+  entering = false
   open = localStorage.getItem(STORAGE_KEY_MAP.fixbarOpen) === 'true'
   themeList = [
     {
@@ -103,6 +98,16 @@ export class FixbarComponent {
         }
         return t.url !== url
       })
+
+    if (!isLogin) {
+      const isShowFace =
+        [settings.showLanguage, settings.showThemeToggle].filter(Boolean)
+          .length === 0
+      if (isShowFace) {
+        this.open = true
+        this.isShowFace = false
+      }
+    }
   }
 
   ngOnInit() {}
@@ -160,6 +165,7 @@ export class FixbarComponent {
   }
 
   goSystemPage() {
+    this.entering = true
     this.router.navigate(['system'])
   }
 

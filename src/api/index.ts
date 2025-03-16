@@ -2,7 +2,7 @@
 // Copyright @ 2018-present xiejiahe. All rights reserved.
 
 import config from '../../nav.config.json'
-import http, { httpNav } from '../utils/http'
+import http, { httpNav, getDefaultRequestData } from '../utils/http'
 import qs from 'qs'
 import { encode } from 'js-base64'
 import {
@@ -14,11 +14,12 @@ import {
   internal,
   components,
 } from 'src/store'
-import { ISettings } from 'src/types'
-import { isSelfDevelop } from 'src/utils/util'
+import type { ISettings } from 'src/types'
+import { isSelfDevelop } from 'src/utils/utils'
 import { isLogin } from 'src/utils/user'
 import { DB_PATH } from 'src/constants'
 import LZString from 'lz-string'
+import event from 'src/utils/mitt'
 
 const { gitRepoUrl, imageRepoUrl } = config
 const s = gitRepoUrl.split('/')
@@ -73,6 +74,7 @@ export function getContentes() {
       settings[k] = resSettings[k]
     }
     getTagMap()
+    event.emit('WEB_REFRESH')
     return res
   })
 }
@@ -223,6 +225,14 @@ export async function getUserCollect(data?: Record<string, any>) {
   return httpNav.post('/api/get', data)
 }
 
+export async function getUserCollectCount(data: Record<string, any> = {}) {
+  data['showError'] = false
+  if (isSelfDevelop) {
+    return http.post('/api/collect/get', data)
+  }
+  return httpNav.post('/api/collect/count', data)
+}
+
 export async function saveUserCollect(data?: Record<string, any>) {
   if (isSelfDevelop) {
     return http.post('/api/collect/save', data)
@@ -271,6 +281,13 @@ export async function getUserInfo(data?: Record<string, any>) {
 
 export async function updateUserInfo(data?: Record<string, any>) {
   return httpNav.post('/api/info/update', data)
+}
+
+export async function getTranslate(data?: Record<string, any>) {
+  if (isSelfDevelop) {
+    return http.post('/api/translate', getDefaultRequestData(data))
+  }
+  return httpNav.post('/api/translate', data)
 }
 
 export function getCDN(path: string) {
