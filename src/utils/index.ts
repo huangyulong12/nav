@@ -3,7 +3,6 @@
 // See https://github.com/xjh22222228/nav
 
 import qs from 'qs'
-import Clipboard from 'clipboard'
 import {
   IWebProps,
   INavThreeProp,
@@ -15,8 +14,9 @@ import { STORAGE_KEY_MAP } from 'src/constants'
 import { CODE_SYMBOL } from 'src/constants/symbol'
 import { isLogin } from './user'
 import { SearchType } from 'src/components/search/index'
-import { websiteList, search, settings, tagMap } from 'src/store'
+import { navs, search, settings, tagMap } from 'src/store'
 import { $t } from 'src/locale'
+import event from 'src/utils/mitt'
 
 export function randomInt(max: number) {
   return Math.floor(Math.random() * max)
@@ -24,7 +24,7 @@ export function randomInt(max: number) {
 
 export function fuzzySearch(
   navList: INavProps[],
-  keyword: string
+  keyword: string,
 ): INavThreeProp[] {
   if (!keyword.trim()) {
     return []
@@ -107,7 +107,7 @@ export function fuzzySearch(
           }
 
           const find = item.tags.some((item: IWebTag) =>
-            item.url?.includes(keyword)
+            item.url?.includes(keyword),
           )
           if (find) {
             if (!urlRecordMap.has(item.id)) {
@@ -152,7 +152,7 @@ export function fuzzySearch(
 
         const searchTags = () => {
           return item.tags.forEach((tag: IWebTag) => {
-            if (tagMap[tag.id]?.name?.toLowerCase() === keyword) {
+            if (tagMap()[tag.id]?.name?.toLowerCase() === keyword) {
               if (!urlRecordMap.has(item.id)) {
                 urlRecordMap.set(item.id, true)
                 navData.push(item)
@@ -304,17 +304,17 @@ export function setLocation() {
     STORAGE_KEY_MAP.LOCATION,
     JSON.stringify({
       id,
-    })
+    }),
   )
 }
 
 export function getDefaultSearchEngine(): ISearchItemProps {
-  let DEFAULT = (search.list[0] || {}) as ISearchItemProps
+  let DEFAULT = (search().list[0] || {}) as ISearchItemProps
   try {
     const engine = window.localStorage.getItem(STORAGE_KEY_MAP.SEARCH_ENGINE)
     if (engine) {
       const local = JSON.parse(engine)
-      const findItem = search.list.find((item) => item.name === local.name)
+      const findItem = search().list.find((item) => item.name === local.name)
       if (findItem) {
         DEFAULT = findItem
       }
@@ -326,7 +326,7 @@ export function getDefaultSearchEngine(): ISearchItemProps {
 export function setDefaultSearchEngine(engine: ISearchItemProps) {
   window.localStorage.setItem(
     STORAGE_KEY_MAP.SEARCH_ENGINE,
-    JSON.stringify(engine)
+    JSON.stringify(engine),
   )
 }
 
@@ -341,28 +341,21 @@ export function isDark(): boolean {
   return Boolean(Number(storageVal))
 }
 
-export function copyText(el: Event, text: string): Promise<boolean> {
-  const target = el.target as Element
-  const ranId = `copy-${Date.now()}`
-  target.id = ranId
-  target.setAttribute('data-clipboard-text', text)
-
-  return new Promise((resolve) => {
-    const clipboard = new Clipboard(`#${ranId}`)
-    clipboard.on('success', function () {
-      clipboard.destroy()
-      resolve(true)
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (error: any) {
+    event.emit('MESSAGE', {
+      type: 'error',
+      message: error.message,
     })
-
-    clipboard.on('error', function () {
-      clipboard.destroy()
-      resolve(false)
-    })
-  })
+    return false
+  }
 }
 
 export async function isValidImg(
-  url: string
+  url: string,
 ): Promise<{ valid: boolean; url: string }> {
   const payload = {
     valid: false,
@@ -403,14 +396,15 @@ export function matchCurrentList(): INavThreeProp[] {
   const { id } = queryString()
   const { oneIndex, twoIndex } = getClassById(id)
   let data: INavThreeProp[] = []
+  const navsData = navs()
 
   try {
     if (
-      websiteList[oneIndex] &&
-      websiteList[oneIndex]?.nav?.length > 0 &&
-      (isLogin || !websiteList[oneIndex].nav[twoIndex].ownVisible)
+      navsData[oneIndex] &&
+      navsData[oneIndex]?.nav?.length > 0 &&
+      (isLogin || !navsData[oneIndex].nav[twoIndex].ownVisible)
     ) {
-      data = websiteList[oneIndex].nav[twoIndex].nav
+      data = navsData[oneIndex].nav[twoIndex].nav
     } else {
       data = []
     }
@@ -448,7 +442,7 @@ export function getOverIndex(selector: string): number {
 
 export function isMobile() {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent
+    navigator.userAgent,
   )
 }
 
@@ -486,9 +480,10 @@ export function getDateTime() {
 }
 
 export function getDefaultTheme() {
-  const t = isMobile() ? settings.appTheme : settings.theme
+  const { theme, appTheme } = settings()
+  const t = isMobile() ? appTheme : theme
   if (t === 'Current') {
-    return settings.theme
+    return theme
   }
   return t
 }
@@ -500,9 +495,10 @@ export function getClassById(id: unknown, initValue = 0, isWebId = false) {
   let threeIndex = initValue
   let parentId = -1
   const breadcrumb: string[] = []
+  const navsData = navs()
 
-  outerLoop: for (let i = 0; i < websiteList.length; i++) {
-    const item = websiteList[i]
+  outerLoop: for (let i = 0; i < navsData.length; i++) {
+    const item = navsData[i]
     if (item.id === id) {
       oneIndex = i
       breadcrumb.push(item.title)
@@ -555,7 +551,7 @@ export function getClassById(id: unknown, initValue = 0, isWebId = false) {
 export function scrollIntoViewLeft(
   parentElement: HTMLElement,
   target: HTMLElement,
-  config?: ScrollToOptions
+  config?: ScrollToOptions,
 ) {
   if (!parentElement || !target) {
     return
@@ -569,4 +565,9 @@ export function scrollIntoViewLeft(
     behavior: 'smooth',
     ...config,
   })
+}
+
+export function imageErrorHidden(el: Event) {
+  // @ts-ignore
+  el.target.style.display = 'none'
 }

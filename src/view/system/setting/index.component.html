@@ -1,3 +1,10 @@
+<div *ngIf="isSelfDevelop">
+  <span class="inline-block !w-[16.66666667%] text-right mb-2.5"
+    >上传文件到网站根目录：</span
+  >
+  <app-upload-file />
+</div>
+
 <form nz-form [formGroup]="validateForm" class="!pb-20">
   <nz-form-item>
     <nz-form-label [nzSpan]="4">{{ $t('_webLogo') }}</nz-form-label>
@@ -7,7 +14,9 @@
         <span>
           {{ $t('_updateLogo') }}
         </span>
-        <app-upload (onChange)="onLogoChange($event, 'favicon')"></app-upload>
+        <app-upload-image
+          (onChange)="onLogoChange($event, 'favicon')"
+        ></app-upload-image>
         <div>
           <input
             class="logo-input"
@@ -17,30 +26,6 @@
           />
         </div>
       </label>
-    </nz-form-control>
-  </nz-form-item>
-
-  <nz-form-item>
-    <nz-form-label [nzSpan]="4">{{ $t('_logoImg') }}</nz-form-label>
-    <nz-form-control [nzSpan]="20">
-      <nz-input-group [nzSuffix]="suffixLogo">
-        <input nz-input formControlName="logo" />
-      </nz-input-group>
-      <ng-template #suffixLogo>
-        <app-upload (onChange)="onLogoChange($event, 'logo')" />
-      </ng-template>
-    </nz-form-control>
-  </nz-form-item>
-
-  <nz-form-item>
-    <nz-form-label [nzSpan]="4">{{ $t('_logoDarkImg') }}</nz-form-label>
-    <nz-form-control [nzSpan]="20">
-      <nz-input-group [nzSuffix]="suffixDarkLogo">
-        <input nz-input formControlName="darkLogo" />
-      </nz-input-group>
-      <ng-template #suffixDarkLogo>
-        <app-upload (onChange)="onLogoChange($event, 'darkLogo')" />
-      </ng-template>
     </nz-form-control>
   </nz-form-item>
 
@@ -128,69 +113,10 @@
       <nz-radio-group formControlName="loading">
         <label nz-radio nzValue="random">{{ $t('_random') }}</label>
         <label nz-radio nzValue="null">{{ $t('_noSet') }}</label>
-        <label
-          nz-radio
-          nzValue="loading1"
-          nz-popover
-          [nzPopoverContent]="loading1"
-          nzPopoverPlacement="bottom"
-        >
-          loading1
-        </label>
-        <ng-template #loading1>
-          <img
-            src="https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/loading1.png"
-            class="preview"
-          />
-        </ng-template>
-
-        <label
-          nz-radio
-          nzValue="loading2"
-          nz-popover
-          [nzPopoverContent]="loading2"
-          nzPopoverPlacement="bottom"
-        >
-          loading2
-        </label>
-        <ng-template #loading2>
-          <img
-            src="https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/loading2.png"
-            class="preview"
-          />
-        </ng-template>
-
-        <label
-          nz-radio
-          nzValue="loading3"
-          nz-popover
-          [nzPopoverContent]="loading3"
-          nzPopoverPlacement="bottom"
-        >
-          loading3
-        </label>
-        <ng-template #loading3>
-          <img
-            src="https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/loading3.png"
-            class="preview"
-          />
-        </ng-template>
-
-        <label
-          nz-radio
-          nzValue="loading4"
-          nz-popover
-          [nzPopoverContent]="loading4"
-          nzPopoverPlacement="bottom"
-        >
-          loading4
-        </label>
-        <ng-template #loading4>
-          <img
-            src="https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/loading4.png"
-            class="preview"
-          />
-        </ng-template>
+        <label nz-radio nzValue="loading1">loading1</label>
+        <label nz-radio nzValue="loading2">loading2</label>
+        <label nz-radio nzValue="loading3">loading3</label>
+        <label nz-radio nzValue="loading4">loading4</label>
       </nz-radio-group>
     </nz-form-control>
   </nz-form-item>
@@ -228,7 +154,7 @@
     </nz-form-control>
   </nz-form-item>
 
-  <nz-form-item>
+  <nz-form-item *ngIf="!isSelfDevelop">
     <nz-form-label [nzSpan]="4" [nzNoColon]="true">{{
       $t('_showGithub')
     }}</nz-form-label>
@@ -366,7 +292,7 @@
 
   <nz-form-item>
     <nz-form-label [nzSpan]="4">{{ $t('_requestAddress') }}</nz-form-label>
-    <nz-form-control [nzSpan]="10">
+    <nz-form-control [nzSpan]="20">
       <input
         nz-input
         formControlName="actionUrl"
@@ -382,6 +308,40 @@
         [nzOptions]="componentOptions"
         formControlName="componentOptions"
       ></nz-checkbox-group>
+    </nz-form-control>
+  </nz-form-item>
+
+  <div class="divider"></div>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="4" [nzNoColon]="true">PWA Enable</nz-form-label>
+    <nz-form-control [nzSpan]="20">
+      <label nz-checkbox formControlName="pwaEnable"></label>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label [nzSpan]="4">PWA Name</nz-form-label>
+    <nz-form-control [nzSpan]="20">
+      <input nz-input formControlName="pwaName" maxlength="10" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item *ngIf="isSelfDevelop">
+    <nz-form-label [nzSpan]="4">PWA Icon</nz-form-label>
+    <nz-form-control [nzSpan]="20">
+      <nz-input-group [nzSuffix]="suffixIconPwa">
+        <input formControlName="pwaIcon" nz-input placeholder="512x512.png" />
+      </nz-input-group>
+
+      <ng-template #suffixIconPwa>
+        <ng-content>
+          <app-upload-image
+            (onChange)="onLogoChange($event, 'pwaIcon')"
+            accept="image/png"
+          ></app-upload-image>
+        </ng-content>
+      </ng-template>
     </nz-form-control>
   </nz-form-item>
 
@@ -442,9 +402,9 @@
           >
             <thead>
               <tr>
-                <th nzWidth="260px">{{ $t('_backgroundImage') }}</th>
-                <th nzWidth="300px">{{ $t('_jumpAddr') }}</th>
-                <th nzWidth="200px">{{ $t('_action') }}</th>
+                <th class="min-w-[260px]">{{ $t('_backgroundImage') }}</th>
+                <th class="min-w-[300px]">{{ $t('_jumpAddr') }}</th>
+                <th class="min-w-[200px]">{{ $t('_action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -456,10 +416,10 @@
                       nz-input
                       type="text"
                       [value]="data['src']"
-                      style="width: 180px; margin-right: 10px"
+                      class="!w-[80%] !mr-2.5 !mt-2.5"
                       (change)="onChangeBannerUrl($event, 'lightImages', idx)"
                     />
-                    <app-upload
+                    <app-upload-image
                       (onChange)="onBannerChange($event, 'lightImages', idx)"
                     />
                   </div>
@@ -571,9 +531,9 @@
           >
             <thead>
               <tr>
-                <th nzWidth="260px">{{ $t('_backgroundImage') }}</th>
-                <th nzWidth="300px">{{ $t('_jumpAddr') }}</th>
-                <th nzWidth="200px">{{ $t('_action') }}</th>
+                <th class="min-w-[260px]">{{ $t('_backgroundImage') }}</th>
+                <th class="min-w-[300px]">{{ $t('_jumpAddr') }}</th>
+                <th class="min-w-[200px]">{{ $t('_action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -586,10 +546,10 @@
                       nz-input
                       type="text"
                       [value]="data['src']"
-                      style="width: 180px; margin-right: 10px"
+                      class="!w-[80%] !mr-2.5 !mt-2.5"
                       (change)="onChangeBannerUrl($event, 'superImages', idx)"
                     />
-                    <app-upload
+                    <app-upload-image
                       (onChange)="onBannerChange($event, 'superImages', idx)"
                     />
                   </div>
@@ -697,9 +657,9 @@
           >
             <thead>
               <tr>
-                <th nzWidth="260px">{{ $t('_backgroundImage') }}</th>
-                <th nzWidth="300px">{{ $t('_jumpAddr') }}</th>
-                <th nzWidth="200px">{{ $t('_action') }}</th>
+                <th class="min-w-[260px]">{{ $t('_backgroundImage') }}</th>
+                <th class="min-w-[300px]">{{ $t('_jumpAddr') }}</th>
+                <th class="min-w-[200px]">{{ $t('_action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -711,12 +671,12 @@
                       nz-input
                       type="text"
                       [value]="data['src']"
-                      style="width: 180px; margin-right: 10px"
+                      class="!w-[80%] !mr-2.5 !mt-2.5"
                       (change)="
                         onChangeBannerUrl($event, 'simThemeImages', idx)
                       "
                     />
-                    <app-upload
+                    <app-upload-image
                       (onChange)="onBannerChange($event, 'simThemeImages', idx)"
                     />
                   </div>
@@ -824,6 +784,30 @@
       </nz-form-item>
 
       <nz-form-item>
+        <nz-form-label [nzSpan]="4">{{ $t('_logoImg') }}</nz-form-label>
+        <nz-form-control [nzSpan]="20">
+          <nz-input-group [nzSuffix]="suffixLogo">
+            <input nz-input formControlName="logo" />
+          </nz-input-group>
+          <ng-template #suffixLogo>
+            <app-upload-image (onChange)="onLogoChange($event, 'logo')" />
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label [nzSpan]="4">{{ $t('_logoDarkImg') }}</nz-form-label>
+        <nz-form-control [nzSpan]="20">
+          <nz-input-group [nzSuffix]="suffixDarkLogo">
+            <input nz-input formControlName="darkLogo" />
+          </nz-input-group>
+          <ng-template #suffixDarkLogo>
+            <app-upload-image (onChange)="onLogoChange($event, 'darkLogo')" />
+          </ng-template>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
         <nz-form-label [nzSpan]="4">{{ $t('_cardStyle') }}</nz-form-label>
         <nz-form-control [nzSpan]="20">
           <nz-radio-group formControlName="sideCardStyle">
@@ -857,9 +841,9 @@
           >
             <thead>
               <tr>
-                <th nzWidth="260px">{{ $t('_backgroundImage') }}</th>
-                <th nzWidth="300px">{{ $t('_jumpAddr') }}</th>
-                <th nzWidth="200px">{{ $t('_action') }}</th>
+                <th class="min-w-[260px]">{{ $t('_backgroundImage') }}</th>
+                <th class="min-w-[300px]">{{ $t('_jumpAddr') }}</th>
+                <th class="min-w-[200px]">{{ $t('_action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -871,12 +855,12 @@
                       nz-input
                       type="text"
                       [value]="data['src']"
-                      style="width: 180px; margin-right: 10px"
+                      class="!w-[80%] !mr-2.5 !mt-2.5"
                       (change)="
                         onChangeBannerUrl($event, 'sideThemeImages', idx)
                       "
                     />
-                    <app-upload
+                    <app-upload-image
                       (onChange)="
                         onBannerChange($event, 'sideThemeImages', idx)
                       "
@@ -1002,7 +986,7 @@
             (change)="onShortcutImgChange($event)"
             class="max-w-full w-full !mt-2.5"
           />
-          <app-upload (onChange)="onShortcutImgChange($event)" />
+          <app-upload-image (onChange)="onShortcutImgChange($event)" />
         </nz-form-control>
       </nz-form-item>
     </nz-tab>

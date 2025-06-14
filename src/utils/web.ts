@@ -7,26 +7,23 @@ import navConfig from '../../nav.config.json'
 import { updateFileContent } from 'src/api'
 import { isLogin } from './user'
 import { IWebProps, INavProps } from '../types'
-import { websiteList } from 'src/store'
+import { navs } from 'src/store'
 import { STORAGE_KEY_MAP, DB_PATH } from 'src/constants'
 import { isSelfDevelop } from './utils'
 import { queryString, getClassById } from './index'
 import { $t } from 'src/locale'
 import { filterLoginData } from './pureUtils'
 
-export async function getWebs() {
+export async function getNavs() {
   if (isSelfDevelop) {
     return
   }
-  function finish(dbData: any) {
-    dbData.forEach((item: any) => {
-      websiteList.push(item)
-    })
+  function finish(navsData: INavProps[]) {
+    navs.set(navsData)
     event.emit('WEB_FINISH')
     window.__FINISHED__ = true
   }
-  let data = filterLoginData(websiteList, isLogin)
-  websiteList.splice(0, websiteList.length)
+  const data = filterLoginData(navs(), isLogin)
   if (!isLogin) {
     return finish(data)
   }
@@ -36,14 +33,15 @@ export async function getWebs() {
   if (storageDate !== navConfig.datetime) {
     const removeKeys = [STORAGE_KEY_MAP.WEBSITE, STORAGE_KEY_MAP.DATE_TIME]
     Array.from({ length: globalThis.localStorage.length }, (_, i) => {
-      const key = globalThis.localStorage.key(i)
+      return globalThis.localStorage.key(i)
+    }).forEach((key) => {
       if (key && removeKeys.includes(key)) {
         globalThis.localStorage.removeItem(key)
       }
     })
     globalThis.localStorage.setItem(
       STORAGE_KEY_MAP.DATE_TIME,
-      navConfig.datetime
+      navConfig.datetime,
     )
     localforage.removeItem(STORAGE_KEY_MAP.WEBSITE)
     finish(data)
@@ -63,44 +61,42 @@ export async function getWebs() {
   }
 
   try {
-    const dbData: any =
+    const navsData: any =
       (await localforage.getItem(STORAGE_KEY_MAP.WEBSITE)) || data
-    finish(dbData)
+    finish(navsData)
   } catch {
     finish(data)
   }
 }
 
-export function setWebsiteList(v?: INavProps[]): Promise<any> {
-  v = v || websiteList
+export function setNavs(navs: INavProps[]): Promise<any> {
   if (isSelfDevelop) {
     return updateFileContent({
-      content: JSON.stringify(v),
+      content: JSON.stringify(navs),
       path: DB_PATH,
     })
   }
-  return localforage.setItem(STORAGE_KEY_MAP.WEBSITE, v)
+  return localforage.setItem(STORAGE_KEY_MAP.WEBSITE, navs)
 }
 
-export function toggleCollapseAll(wsList?: INavProps[]): boolean {
-  wsList ||= websiteList
+export function toggleCollapseAll(navs: INavProps[]): boolean {
   const { id } = queryString()
   const { oneIndex, twoIndex } = getClassById(id)
-  const collapsed = !wsList[oneIndex].nav[twoIndex].collapsed
-  wsList[oneIndex].nav[twoIndex].collapsed = collapsed
-  wsList[oneIndex].nav[twoIndex].nav.map((item) => {
+  const collapsed = !navs[oneIndex].nav[twoIndex].collapsed
+  navs[oneIndex].nav[twoIndex].collapsed = collapsed
+  navs[oneIndex].nav[twoIndex].nav.map((item) => {
     item.collapsed = collapsed
     return item
   })
   if (!isSelfDevelop) {
-    setWebsiteList(wsList)
+    setNavs(navs)
   }
   return collapsed
 }
 
 export async function deleteWebByIds(
   ids: number[],
-  isDelRid = false
+  isDelRid = false,
 ): Promise<boolean> {
   let hasDelete = false
   function f(arr: any[]) {
@@ -120,10 +116,10 @@ export async function deleteWebByIds(
       }
     }
   }
-
-  f(websiteList)
+  const navsData = navs()
+  f(navsData)
   if (hasDelete) {
-    await setWebsiteList(websiteList)
+    await setNavs(navsData)
     const { q } = queryString()
     if (q && !isSelfDevelop) {
       event.emit('WEB_REFRESH')
@@ -153,8 +149,10 @@ export function updateByWeb(oldId: number, newData: IWebProps) {
     }
   }
 
-  f(websiteList)
-  setWebsiteList(websiteList)
+  const navsData = navs()
+  f(navsData)
+  navs.set(navsData)
+  setNavs(navsData)
   return ok
 }
 
@@ -175,7 +173,7 @@ export function getWebById(id: number): IWebProps | null {
       }
     }
   }
-  f(websiteList)
+  f(navs())
   return web
 }
 
@@ -200,14 +198,16 @@ export function updateByClass(oldId: number, newData: any) {
     }
   }
 
-  f(websiteList)
-  setWebsiteList(websiteList)
+  const navsData = navs()
+  f(navsData)
+  navs.set(navsData)
+  setNavs(navsData)
   return ok
 }
 
 export async function deleteClassByIds(
   ids: number[],
-  isDelRid = false
+  isDelRid = false,
 ): Promise<boolean> {
   let hasDelete = false
 
@@ -232,19 +232,21 @@ export async function deleteClassByIds(
     }
   }
 
+  const navsData = navs()
   // 删除一级分类
   ids.forEach((id) => {
-    websiteList.forEach((item, index) => {
+    navsData.forEach((item, index) => {
       if (item.id === id) {
         hasDelete = true
-        websiteList.splice(index, 1)
+        navsData.splice(index, 1)
       }
     })
   })
 
-  f(websiteList)
+  f(navsData)
   if (hasDelete) {
-    await setWebsiteList(websiteList)
+    navs.set(navsData)
+    await setNavs(navsData)
   }
   return hasDelete
 }
@@ -267,7 +269,9 @@ export function pushDataByAny(parentId: number, data: any): boolean {
     }
   }
 
-  f(websiteList)
-  setWebsiteList(websiteList)
+  const navsData = navs()
+  f(navsData)
+  navs.set(navsData)
+  setNavs(navsData)
   return ok
 }

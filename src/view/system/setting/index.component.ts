@@ -32,7 +32,8 @@ import { NzTabsModule } from 'ng-zorro-antd/tabs'
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm'
 import { NzPopoverModule } from 'ng-zorro-antd/popover'
 import { NzSelectModule } from 'ng-zorro-antd/select'
-import { UploadComponent } from 'src/components/upload/index.component'
+import { UploadImageComponent } from 'src/components/upload-image/index.component'
+import { UploadFileComponent } from 'src/components/upload-file/index.component'
 import { CardComponent } from 'src/components/card/index.component'
 import { ActionType } from 'src/types'
 import type { IComponentItemProps, IWebProps, ThemeType } from 'src/types'
@@ -65,7 +66,8 @@ const extraForm: Record<string, any> = {
     NzRadioModule,
     NzCheckboxModule,
     NzPopconfirmModule,
-    UploadComponent,
+    UploadImageComponent,
+    UploadFileComponent,
     CardComponent,
   ],
   selector: 'system-setting',
@@ -78,7 +80,7 @@ export default class SystemSettingComponent {
   readonly textareaSize = { minRows: 3, maxRows: 20 }
   validateForm!: FormGroup
   submitting: boolean = false
-  settings = settings
+  settings = settings()
   tabActive = 0
   componentOptions: any[] = []
   actionOptions = [
@@ -102,11 +104,11 @@ export default class SystemSettingComponent {
     url: 'https://nav3.cn',
     icon: replaceJsdelivrCDN(
       'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/logo.svg',
-      settings
+      settings(),
     ),
     img: replaceJsdelivrCDN(
       'https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/4.png',
-      settings
+      settings(),
     ),
     tags: [],
     breadcrumb: [],
@@ -116,7 +118,7 @@ export default class SystemSettingComponent {
   constructor(
     private fb: FormBuilder,
     private notification: NzNotificationService,
-    private message: NzMessageService
+    private message: NzMessageService,
   ) {
     const themeMap: Record<ThemeType, number> = {
       Light: 0,
@@ -126,11 +128,11 @@ export default class SystemSettingComponent {
       Shortcut: 4,
       App: 5,
     }
-    this.tabActive = themeMap[settings.theme] || 0
+    this.tabActive = themeMap[this.settings.theme] || 0
 
-    this.componentOptions = component.components.map((item) => {
-      const data = settings.components.find(
-        (c) => item.type === c.type && item.id === c.id
+    this.componentOptions = component().components.map((item) => {
+      const data = this.settings.components.find(
+        (c) => item.type === c.type && item.id === c.id,
       )
       if (data) {
         extraForm['componentOptions'].push(data.id)
@@ -144,7 +146,7 @@ export default class SystemSettingComponent {
     })
     const group: any = {
       ...extraForm,
-      ...settings,
+      ...this.settings,
     }
     const groupPayload: any = {}
     for (const k in group) {
@@ -153,9 +155,9 @@ export default class SystemSettingComponent {
     this.validateForm = this.fb.group(groupPayload)
 
     event.on('GITHUB_USER_INFO', (data: any) => {
-      this.validateForm
-        .get('email')!
-        .setValue(this.settings.email || data.email || '')
+      if (!this.validateForm.get('email')?.value) {
+        this.validateForm.get('email')!.setValue(data.email)
+      }
     })
   }
 
@@ -281,8 +283,8 @@ export default class SystemSettingComponent {
         lightImages: this.settings.lightImages.filter(filterImage),
         components: formValues.componentOptions
           .map((id: number) => {
-            const data = component.components.find(
-              (item: IComponentItemProps) => item.id === id
+            const data = component().components.find(
+              (item: IComponentItemProps) => item.id === id,
             )
             return {
               id: data?.id,
@@ -305,7 +307,10 @@ export default class SystemSettingComponent {
           this.submitting = false
         })
         .then(() => {
-          this.message.success($t('_saveSuccess'))
+          if (!isSelfDevelop) {
+            settings.set(values)
+          }
+          this.message.success($t('_syncSuccessTip'))
           resolve(null)
         })
         .catch(reject)

@@ -22,10 +22,9 @@ import { NzTableModule } from 'ng-zorro-antd/table'
 import { NzInputModule } from 'ng-zorro-antd/input'
 import { NzSwitchModule } from 'ng-zorro-antd/switch'
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm'
-import { UploadComponent } from 'src/components/upload/index.component'
+import { UploadImageComponent } from 'src/components/upload-image/index.component'
 import { NzFormModule } from 'ng-zorro-antd/form'
 import { NzSliderModule } from 'ng-zorro-antd/slider'
-import { isSelfDevelop } from 'src/utils/utils'
 import { isValidImg } from 'src/utils'
 
 @Component({
@@ -37,7 +36,7 @@ import { isValidImg } from 'src/utils'
     NzButtonModule,
     NzTableModule,
     NzInputModule,
-    UploadComponent,
+    UploadImageComponent,
     NzSwitchModule,
     NzPopconfirmModule,
     NzFormModule,
@@ -50,18 +49,17 @@ import { isValidImg } from 'src/utils'
 })
 export default class SystemSearchComponent {
   readonly $t = $t
-  readonly isSelfDevelop = isSelfDevelop
-  searchList: ISearchItemProps[] = search.list
+  searchList: ISearchItemProps[] = search().list
   submitting: boolean = false
   validateForm!: FormGroup
 
   constructor(
     private fb: FormBuilder,
     private message: NzMessageService,
-    private modal: NzModalService
+    private modal: NzModalService,
   ) {
     const group: any = {
-      ...search,
+      ...search(),
       list: null,
     }
     const groupPayload: any = {}
@@ -158,7 +156,7 @@ export default class SystemSearchComponent {
           path: SEARCH_PATH,
         })
           .then(() => {
-            this.message.success($t('_saveSuccess'))
+            this.message.success($t('_syncSuccessTip'))
           })
           .finally(() => {
             this.submitting = false

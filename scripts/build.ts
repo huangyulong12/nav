@@ -13,6 +13,7 @@ import {
   PATHS,
   getConfig,
   fileWriteStream,
+  writePWA,
 } from './utils'
 import type { INavProps, ISettings } from '../src/types/index'
 
@@ -32,10 +33,10 @@ const handleFileOperation = (operation: () => any): any => {
 }
 
 const db: INavProps[] = handleFileOperation(() =>
-  JSON.parse(fs.readFileSync(PATHS.db, 'utf-8'))
+  JSON.parse(fs.readFileSync(PATHS.db, 'utf-8')),
 )
 const settings: ISettings = handleFileOperation(() =>
-  JSON.parse(fs.readFileSync(PATHS.settings, 'utf-8'))
+  JSON.parse(fs.readFileSync(PATHS.settings, 'utf-8')),
 )
 
 const seoTemplate = writeSEO(db, { settings })
@@ -46,6 +47,15 @@ const html = writeTemplate({
 })
 
 handleFileOperation(() => fs.writeFileSync(PATHS.html.write, html))
+handleFileOperation(() =>
+  writePWA(
+    {
+      ...settings,
+      pwaIcon: '',
+    },
+    PATHS.manifestPublic,
+  ),
+)
 
 let errorUrlCount = 0
 

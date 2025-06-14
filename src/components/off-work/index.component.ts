@@ -18,7 +18,7 @@ import { component } from 'src/store'
 export class OffWorkComponent {
   @Input() data!: IComponentItemProps
 
-  readonly component = component
+  readonly component = component()
   private timer: any
   countdownStr = ''
   isRest = false
@@ -26,7 +26,7 @@ export class OffWorkComponent {
   constructor() {
     document.addEventListener(
       'visibilitychange',
-      this.visibilitychange.bind(this)
+      this.visibilitychange.bind(this),
     )
   }
 

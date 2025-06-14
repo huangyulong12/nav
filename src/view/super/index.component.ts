@@ -58,7 +58,7 @@ export default class SideComponent {
   constructor(public commonService: CommonService) {}
 
   get isEllipsis() {
-    return this.commonService.settings.superOverType === 'ellipsis'
+    return this.commonService.settings().superOverType === 'ellipsis'
   }
 
   ngAfterViewInit() {
@@ -70,7 +70,7 @@ export default class SideComponent {
         this.items.toArray()[this.commonService.oneIndex].nativeElement,
         {
           behavior: 'auto',
-        }
+        },
       )
     }
 
@@ -78,7 +78,7 @@ export default class SideComponent {
       this.parentThreeElement.nativeElement,
       this.itemsThree.toArray()[this.commonService.selectedThreeIndex]
         .nativeElement,
-      { behavior: 'auto' }
+      { behavior: 'auto' },
     )
   }
 

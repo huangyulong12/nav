@@ -4,8 +4,8 @@
 
 import { Component, Input } from '@angular/core'
 import { CommonModule } from '@angular/common'
-import { websiteList } from 'src/store'
-import type { IWebProps, INavProps } from 'src/types'
+import { navs } from 'src/store'
+import type { IWebProps } from 'src/types'
 import { TopType } from 'src/types'
 import { queryString, fuzzySearch, isMobile, getDefaultTheme } from 'src/utils'
 import { isNumber } from 'src/utils/pureUtils'
@@ -35,14 +35,13 @@ export class WebListComponent {
   @Input() search = true
   @Input() overflow = false
 
-  websiteList: INavProps[] = websiteList
   dataList: IWebProps[] = []
 
   constructor(
     private router: Router,
     public jumpService: JumpService,
     private activatedRoute: ActivatedRoute,
-    public commonService: CommonService
+    public commonService: CommonService,
   ) {}
 
   ngOnInit() {
@@ -52,7 +51,7 @@ export class WebListComponent {
         const { q } = queryString()
 
         if (this.search && q.trim()) {
-          const result = fuzzySearch(this.websiteList, q)
+          const result = fuzzySearch(navs(), q)
           if (result.length === 0) {
             this.dataList = []
           } else {
@@ -95,7 +94,7 @@ export class WebListComponent {
         if (item.url) {
           if (item.top && (isLogin || !item.ownVisible)) {
             const isMatch = (item.topTypes || []).some(
-              (v: number) => path === TopType[v]
+              (v: number) => path === TopType[v],
             )
             if (isMatch) {
               dataList.push(item)
@@ -106,7 +105,7 @@ export class WebListComponent {
         }
       }
     }
-    r(websiteList)
+    r(navs())
 
     // @ts-ignore
     this.dataList = dataList.sort((a: any, b: any) => {

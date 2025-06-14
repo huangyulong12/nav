@@ -9,6 +9,7 @@ import {
   ElementRef,
   ViewChildren,
   QueryList,
+  SimpleChanges,
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import type { INavThreeProp } from 'src/types'
@@ -37,29 +38,38 @@ export class ClassTabsComponent {
 
   constructor() {}
 
-  ngOnChanges() {
-    this.selectTab(0)
-    this.toolbarItems = []
-    requestAnimationFrame(() => {
-      this.getToolbarItems()
-      this.setAnchor()
-    })
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['data']) {
+      const { currentValue = [], previousValue = [] } = changes['data']
+      const currentIds = currentValue
+        .map((item: any) => item.rId || item.id)
+        .join(',')
+      const previousIds = previousValue
+        .map((item: any) => item.rId || item.id)
+        .join(',')
+      if (currentIds === previousIds) return
+      this.selectTab(0)
+      requestAnimationFrame(() => {
+        this.getToolbarItems()
+        this.setAnchorStyle()
+
+        if (this.scrollSubscription) {
+          this.scrollSubscription.unsubscribe()
+          this.scrollSubscription = null
+        }
+        const target = this.getTarget()
+        this.scrollSubscription = fromEvent(target, 'scroll')
+          .pipe(debounceTime(100))
+          .subscribe(() => this.handleScroll())
+      })
+    }
   }
 
   ngOnDestroy() {
     if (this.scrollSubscription) {
       this.scrollSubscription.unsubscribe()
+      this.scrollSubscription = null
     }
-  }
-
-  ngAfterViewInit() {
-    this.getToolbarItems()
-    this.setAnchor()
-    const target = this.getTarget()
-
-    this.scrollSubscription = fromEvent(target, 'scroll')
-      .pipe(debounceTime(100))
-      .subscribe((event) => this.handleScroll(event))
   }
 
   private getTarget() {
@@ -70,11 +80,11 @@ export class ClassTabsComponent {
 
   private getToolbarItems() {
     this.toolbarItems = Array.from(
-      document.querySelectorAll('.nav-wrapper')
+      document.querySelectorAll('.nav-wrapper'),
     ) as HTMLElement[]
   }
 
-  private handleScroll(e: any) {
+  private handleScroll() {
     if (this.disableScrollEvent) {
       this.disableScrollEvent = false
       return
@@ -107,7 +117,7 @@ export class ClassTabsComponent {
     if (this.activeIndex === index) return
     this.activeIndex = index
     this.scrollIntoViewTabs()
-    this.setAnchor()
+    this.setAnchorStyle()
   }
 
   private scrollIntoViewTabs() {
@@ -116,7 +126,7 @@ export class ClassTabsComponent {
       this.items.toArray()[this.activeIndex].nativeElement,
       {
         behavior: 'smooth',
-      }
+      },
     )
   }
 
@@ -125,12 +135,12 @@ export class ClassTabsComponent {
 
     this.activeIndex = index
     this.scrollIntoViewTabs()
-    this.setAnchor()
+    this.setAnchorStyle()
     this.disableScrollEvent = true
     this.scrollIntoView()
   }
 
-  private setAnchor() {
+  private setAnchorStyle() {
     const anchorElement = this.anchorElement.nativeElement
     if (!anchorElement) return
     const el = this.items.toArray()[this.activeIndex]?.nativeElement

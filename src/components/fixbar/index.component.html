@@ -23,15 +23,22 @@
   <div
     class="common-show wrapper dark-bg dark-border-color dark-action-hover"
     (click)="handleSync()"
-    *ngIf="isLogin"
-    nz-tooltip
-    [nzTooltipTitle]="$t('_syncData')"
+    *ngIf="isLogin && !isSelfDevelop"
   >
-    <i class="iconfont iconwinfo-icon-tongbu font-bold" style="color: red"></i>
+    <img class="iconfont" src="assets/img/sync.svg" />
   </div>
 
   <div
-    *ngIf="isLogin"
+    class="common-show wrapper dark-bg dark-border-color dark-action-hover"
+    [class.rotate]="checking"
+    (click)="unregisterServiceWorkers()"
+    *ngIf="isPwaMode"
+  >
+    <i class="iconfont iconwinfo-icon-tongbu font-bold !text-red-400"></i>
+  </div>
+
+  <div
+    *ngIf="isLogin || isPwaMode"
     class="common-show wrapper dark-bg dark-border-color dark-action-hover"
     [class.rotate]="entering"
     (click)="goSystemPage()"
@@ -86,13 +93,10 @@
   <div
     class="wrapper scrolltop dark-bg dark-border-color dark-action-hover"
     (click)="goTop()"
-    [class.showTop]="isShowTop"
+    [class.showTop]="isShowTop || open"
     *ngIf="showTop"
   >
-    <i
-      class="iconfont iconjiantouarrow483 arrow"
-      style="color: rgb(61, 136, 82)"
-    ></i>
+    <i class="iconfont iconjiantouarrow483 arrow !text-green-600"></i>
   </div>
 
   <div
@@ -101,10 +105,9 @@
     *ngIf="isShowFace"
   >
     <i
-      class="iconfont font-bold"
+      class="iconfont font-bold !text-orange-400 text-xs"
       [class.iconxiaolian]="open"
       [class.iconxiaolian-02]="!open"
-      style="color: rgb(231, 127, 81); font-size: 22px"
     ></i>
   </div>
 </div>

@@ -30,21 +30,35 @@ export function removeToken() {
   return globalThis.localStorage.removeItem(STORAGE_KEY_MAP.TOKEN)
 }
 
+export function getImageToken() {
+  return globalThis.localStorage?.getItem(STORAGE_KEY_MAP.IMAGE_TOKEN) || ''
+}
+
+export function setImageToken(token: string) {
+  return globalThis.localStorage.setItem(STORAGE_KEY_MAP.IMAGE_TOKEN, token)
+}
+
 export function removeWebsite() {
   return localforage.removeItem(STORAGE_KEY_MAP.WEBSITE)
 }
 
 export function userLogout() {
-  const removeKeys = [STORAGE_KEY_MAP.TOKEN, STORAGE_KEY_MAP.WEBSITE]
+  const removeKeys = [
+    STORAGE_KEY_MAP.TOKEN,
+    STORAGE_KEY_MAP.IMAGE_TOKEN,
+    STORAGE_KEY_MAP.WEBSITE,
+  ]
   localforage.clear()
   Array.from({ length: globalThis.localStorage.length }, (_, i) => {
-    const key = globalThis.localStorage.key(i)
+    return globalThis.localStorage.key(i)
+  }).forEach((key) => {
     if (key && removeKeys.includes(key)) {
       globalThis.localStorage.removeItem(key)
     }
   })
   Array.from({ length: globalThis.sessionStorage.length }, (_, i) => {
-    const key = globalThis.sessionStorage.key(i)
+    return globalThis.sessionStorage.key(i)
+  }).forEach((key) => {
     if (key && removeKeys.includes(key)) {
       globalThis.sessionStorage.removeItem(key)
     }

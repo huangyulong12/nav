@@ -128,6 +128,7 @@ export interface ITagPropValues {
   color: string
   desc: string
   isInner: boolean
+  noOpen?: boolean
   sort?: number | string
 
   [key: string]: any
@@ -298,6 +299,10 @@ export interface ISettings {
   components: IComponentItemProps[]
 
   runtime: number
+
+  pwaEnable: boolean
+  pwaName: string
+  pwaIcon: string
 
   [key: string]: any
 }

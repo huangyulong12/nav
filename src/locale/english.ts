@@ -128,7 +128,7 @@ const english: Record<string, any> = {
   _about: 'About',
   _webInfo: 'Web info',
   _systemSet: 'Settings',
-  _searchEngines: 'Engines',
+  _searchEngines: 'Search',
   _userCollect: 'Collect',
   _bookmarkImport: 'Book Import',
   _bookmarkExport: 'Book Export',
@@ -162,7 +162,7 @@ const english: Record<string, any> = {
   _autoPlay: 'Auto play',
   _importBackup: 'Import backup',
   _importBackupTip:
-    'After importing, all current website data will be cleared and imported',
+    'After importing, all current data will be cleared and imported',
   _showLanguage: 'Display switch language',
   _showRate: 'Show rate',
   _showCopy: 'Display Card Copy',
@@ -174,8 +174,6 @@ const english: Record<string, any> = {
   _dragSort: 'Drag to sort',
   _checkWeb:
     'Last time, {count} website links were detected to be invalid. Please refer to the management website for details. If you need to check the status again, simply click Save to trigger the event.',
-  _buildTip:
-    'After modification, please save and wait for the build to complete. Leaving is invalid',
   _enableSEO: 'Enable SEO (loading slightly slower)',
   _allowUser: 'Allow users to submit',
   _collectMenuView: `Please refer to the user's inclusion menu for specific details`,
@@ -334,6 +332,15 @@ const english: Record<string, any> = {
   _logoDarkImg: 'Logo Dark Picture',
   _errLogo: 'The logo image cannot be accessed',
   _logoMaxHeight: 'Max height',
+  _noPublic: 'No open',
+  _noUpdate: 'No updates available',
+  _updating: 'updating...',
+  _canNewVer:
+    'Is there a new version available? Refresh to update the application?',
+  _nowUpdate: 'Immediate Updating',
+  _later: 'Later',
+  _avaUpdate: 'Application updates available',
+  _updateFailed: 'UpdateFailed',
 }
 
 export default english

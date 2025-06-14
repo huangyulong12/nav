@@ -8,6 +8,7 @@ import {
   ViewChildren,
   QueryList,
   ElementRef,
+  computed,
 } from '@angular/core'
 import { CommonModule } from '@angular/common'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
@@ -24,12 +25,12 @@ import {
   getWebInfo,
   getTranslate,
   getScreenshot,
-  createFile,
+  createImageFile,
   getImageRepo,
   getCDN,
 } from 'src/api'
 import { $t } from 'src/locale'
-import { settings, websiteList, tagList, tagMap } from 'src/store'
+import { settings, navs, tagList, tagMap } from 'src/store'
 import { isLogin, getPermissions } from 'src/utils/user'
 import { NzModalModule } from 'ng-zorro-antd/modal'
 import { NzFormModule } from 'ng-zorro-antd/form'
@@ -38,13 +39,17 @@ import { NzSwitchModule } from 'ng-zorro-antd/switch'
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox'
 import { NzRateModule } from 'ng-zorro-antd/rate'
 import { LogoComponent } from 'src/components/logo/logo.component'
-import { UploadComponent } from 'src/components/upload/index.component'
+import { UploadImageComponent } from 'src/components/upload-image/index.component'
 import { NzIconModule } from 'ng-zorro-antd/icon'
 import { NzButtonModule } from 'ng-zorro-antd/button'
 import { NzSelectModule } from 'ng-zorro-antd/select'
 import { SELF_SYMBOL, DEFAULT_SORT_INDEX } from 'src/constants/symbol'
 import { JumpService } from 'src/services/jump'
-import { removeTrailingSlashes } from 'src/utils/pureUtils'
+import {
+  removeTrailingSlashes,
+  transformSafeHTML,
+  transformUnSafeHTML,
+} from 'src/utils/pureUtils'
 import event from 'src/utils/mitt'
 
 @Component({
@@ -61,7 +66,7 @@ import event from 'src/utils/mitt'
     NzCheckboxModule,
     NzRateModule,
     LogoComponent,
-    UploadComponent,
+    UploadImageComponent,
     NzIconModule,
     NzButtonModule,
   ],
@@ -71,15 +76,19 @@ import event from 'src/utils/mitt'
 })
 export class CreateWebComponent {
   @ViewChildren('inputs') inputs!: QueryList<ElementRef>
-  @ViewChild('inputUrl', { static: false }) inputUrl!: ElementRef
+  @ViewChild('inputUrl', { static: false }) inputUrlRef!: ElementRef
+  @ViewChild('inputTitle') inputTitleRef!: ElementRef
+  @ViewChild('inputDesc') inputDescRef!: ElementRef
 
   readonly $t = $t
   readonly isLogin: boolean = isLogin
-  readonly settings = settings
-  readonly permissions = getPermissions(settings)
+  readonly settings = settings()
+  readonly permissions = getPermissions(settings())
   readonly DEFAULT_SORT_INDEX = DEFAULT_SORT_INDEX
-  validateForm!: FormGroup
-  tagList = tagList
+  readonly validateForm!: FormGroup
+  readonly tagList = computed(() =>
+    tagList().filter((item) => !(!isLogin && item.noOpen)),
+  )
   submitting = false
   getting = false
   translating = false
@@ -98,7 +107,7 @@ export class CreateWebComponent {
     public readonly jumpService: JumpService,
     private fb: FormBuilder,
     private message: NzMessageService,
-    private notification: NzNotificationService
+    private notification: NzNotificationService,
   ) {
     event.on('CREATE_WEB', (props: any) => {
       this.open(this, props)
@@ -167,7 +176,7 @@ export class CreateWebComponent {
       isMove?: boolean
       parentId?: number
       detail: IWebProps | null | undefined
-    }
+    },
   ) {
     if (props?.isKeyboard && this.showModal) {
       return
@@ -176,9 +185,9 @@ export class CreateWebComponent {
     const detail = props?.detail
     if (!detail) {
       ctx.parentId = props?.parentId || ctx.parentId
-      if (websiteList.length === 0) return
+      if (navs().length === 0) return
       if (ctx.parentId === -1) {
-        const parentId = websiteList[0]?.nav?.[0]?.nav?.[0]?.id
+        const parentId = navs()[0]?.nav?.[0]?.nav?.[0]?.id
         if (!parentId) {
           return
         }
@@ -188,31 +197,33 @@ export class CreateWebComponent {
     ctx.detail = detail
     ctx.showModal = true
     ctx.isMove = !!props?.isMove
-    this.validateForm.get('title')!.setValue(getTextContent(detail?.name))
-    this.validateForm.get('desc')!.setValue(getTextContent(detail?.desc))
-    this.validateForm.get('index')!.setValue(detail?.index ?? '')
-    this.validateForm.get('icon')!.setValue(detail?.icon || '')
-    this.validateForm.get('url')!.setValue(detail?.url || '')
-    this.validateForm.get('top')!.setValue(detail?.top ?? false)
-    this.validateForm.get('topTypes')!.setValue(detail?.topTypes ?? [])
-    this.validateForm.get('ownVisible')!.setValue(detail?.ownVisible ?? false)
-    this.validateForm.get('rate')!.setValue(detail?.rate ?? 5)
-    this.validateForm.get('img')!.setValue(detail?.img ?? '')
+
     if (detail) {
+      this.validateForm
+        .get('title')!
+        .setValue(transformUnSafeHTML(getTextContent(detail?.name)))
+      this.validateForm
+        .get('desc')!
+        .setValue(transformUnSafeHTML(getTextContent(detail?.desc)))
+      this.validateForm.get('index')!.setValue(detail?.index ?? '')
+      this.validateForm.get('icon')!.setValue(detail?.icon || '')
+      this.validateForm.get('url')!.setValue(detail?.url || '')
+      this.validateForm.get('top')!.setValue(detail?.top ?? false)
+      this.validateForm.get('topTypes')!.setValue(detail?.topTypes ?? [])
+      this.validateForm.get('ownVisible')!.setValue(detail?.ownVisible ?? false)
+      this.validateForm.get('rate')!.setValue(detail?.rate ?? 5)
+      this.validateForm.get('img')!.setValue(detail?.img ?? '')
       if (Array.isArray(detail.tags)) {
         detail.tags.forEach((item: IWebTag) => {
           ;(this.validateForm?.get('urlArr') as FormArray).push?.(
             this.fb.group({
               id: Number(item.id),
-              name: tagMap[item.id].name ?? '',
+              name: tagMap()[item.id].name ?? '',
               url: item.url || '',
-            })
+            }),
           )
         })
       }
-    }
-
-    if (detail) {
       const { parentId } = getClassById(detail.id, 0, true)
       ctx.parentId = parentId
     } else {
@@ -224,11 +235,12 @@ export class CreateWebComponent {
   }
 
   private focusUrl() {
-    if (this.validateForm.get('url')?.value) {
-      return
-    }
     setTimeout(() => {
-      this.inputUrl?.nativeElement?.focus()
+      if (this.detail) {
+        this.inputTitleRef?.nativeElement?.focus()
+        return
+      }
+      this.inputUrlRef?.nativeElement?.focus()
     }, 400)
   }
 
@@ -242,7 +254,7 @@ export class CreateWebComponent {
   }
 
   async onUrlBlur() {
-    if (!settings.openSearch) {
+    if (!this.settings.openSearch) {
       return
     }
     let url = this.url
@@ -275,7 +287,7 @@ export class CreateWebComponent {
         this.validateForm.get('desc')!.setValue(res['description'])
       }
       this.getting = false
-      this.inputUrl?.nativeElement?.blur()
+      this.inputUrlRef?.nativeElement?.blur()
       this.checkRepeat()
     } catch {}
   }
@@ -286,7 +298,7 @@ export class CreateWebComponent {
         id: '',
         name: '',
         url: '',
-      })
+      }),
     )
   }
 
@@ -307,12 +319,33 @@ export class CreateWebComponent {
   }
 
   handleTranslate(key = 'desc') {
+    let content = key === 'desc' ? this.desc : this.title
+    let transalteBody = content
+    const el = key === 'desc' ? this.inputDescRef : this.inputTitleRef
+    const start = el.nativeElement.selectionStart
+    const end = el.nativeElement.selectionEnd
+    const isSelected = start !== end
+    if (isSelected) {
+      transalteBody = content.slice(start, end)
+    }
+    if (!transalteBody) {
+      return
+    }
     this.translating = true
     getTranslate({
-      content: key === 'desc' ? this.desc : this.title,
+      content: transalteBody,
     })
       .then((res) => {
-        this.validateForm.get(key)!.setValue(res.data.content || '')
+        const translateContent = res.data.content
+        if (translateContent) {
+          if (isSelected) {
+            const newContent =
+              content.slice(0, start) + translateContent + content.slice(end)
+            this.validateForm.get(key)!.setValue(newContent)
+          } else {
+            this.validateForm.get(key)!.setValue(translateContent)
+          }
+        }
       })
       .finally(() => {
         this.translating = false
@@ -325,7 +358,7 @@ export class CreateWebComponent {
     getScreenshot({ url })
       .then((res) => {
         const path = `${Date.now()}.png`
-        createFile({
+        createImageFile({
           branch: getImageRepo().branch,
           message: 'create image',
           content: res.data.image,
@@ -349,9 +382,9 @@ export class CreateWebComponent {
     try {
       const url = removeTrailingSlashes(this.url)
       const { oneIndex, twoIndex, threeIndex, breadcrumb } = getClassById(
-        this.parentId
+        this.parentId,
       )
-      const w = websiteList[oneIndex].nav[twoIndex].nav[threeIndex].nav
+      const w = navs()[oneIndex].nav[twoIndex].nav[threeIndex].nav
       const repeatData = w.find((item) => {
         if (this.detail && item.id === this.detail.id) {
           return false
@@ -369,7 +402,7 @@ export class CreateWebComponent {
           `,
           {
             nzDuration: 20000,
-          }
+          },
         )
       } else {
         this.message.success($t('_urlNoRepeat'))
@@ -401,10 +434,10 @@ export class CreateWebComponent {
 
     const payload: Record<string, any> = {
       id: this.detail?.id,
-      name: title,
+      name: transformSafeHTML(title),
+      desc: transformSafeHTML(this.desc),
       breadcrumb: this.detail?.breadcrumb ?? [],
       rate,
-      desc: this.desc,
       top,
       index,
       ownVisible,

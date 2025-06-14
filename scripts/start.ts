@@ -20,6 +20,7 @@ import {
   PATHS,
   getConfig,
   fileWriteStream,
+  writePWA,
 } from './utils'
 import { replaceJsdelivrCDN } from '../src/utils/pureUtils'
 import type {
@@ -36,7 +37,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 dayjs.tz.setDefault('Asia/Shanghai')
 
-const getWebs = (): INavProps[] => {
+const getNavs = (): INavProps[] => {
   try {
     const strings = fs.readFileSync(PATHS.db).toString().trim()
     if (!strings) throw new Error('empty')
@@ -59,7 +60,7 @@ const main = async () => {
   const configJson = getConfig()
   fs.writeFileSync(PATHS.configJson, JSON.stringify(configJson))
 
-  const db = getWebs()
+  const db = getNavs()
   let internal = {} as InternalProps
   let settings = {} as ISettings
   let tags: ITagPropValues[] = []
@@ -90,53 +91,17 @@ const main = async () => {
       search.list = [
         {
           name: '站内',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/logo.svg',
+          icon:
+            settings.favicon ||
+            'https://gcore.jsdelivr.net/gh/xjh22222228/public@gh-pages/nav/logo.svg',
           placeholder: '站内搜索',
           blocked: false,
           isInner: true,
         },
         {
-          name: '百度',
-          url: 'https://www.baidu.com/s?wd=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/baidu.svg',
-          placeholder: '百度一下',
-          blocked: false,
-          isInner: false,
-        },
-        {
           name: 'Google',
           url: 'https://www.google.com/search?q=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/google.svg',
-          blocked: false,
-          isInner: false,
-        },
-        {
-          name: '必应',
-          url: 'https://cn.bing.com/search?q=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/bing.svg',
-          blocked: false,
-          isInner: false,
-        },
-        {
-          name: 'GitHub',
-          url: 'https://github.com/search?q=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/github.svg',
-          placeholder: 'Search GitHub',
-          blocked: false,
-          isInner: false,
-        },
-        {
-          name: '知乎',
-          url: 'https://www.zhihu.com/search?type=content&q=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/zhihu.svg',
-          blocked: false,
-          isInner: false,
-        },
-        {
-          name: '豆瓣',
-          url: 'https://search.douban.com/book/subject_search?search_text=',
-          icon: 'https://gcore.jsdelivr.net/gh/xjh22222228/nav-image@image/douban.svg',
-          placeholder: '书名、作者、ISBN',
+          icon: 'https://www.google.com/favicon.ico',
           blocked: false,
           isInner: false,
         },
@@ -168,7 +133,7 @@ const main = async () => {
   } catch {
   } finally {
     let idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.Calendar
+      (item) => item['type'] === ComponentType.Calendar,
     )
     const calendar = {
       type: ComponentType.Calendar,
@@ -186,7 +151,7 @@ const main = async () => {
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.OffWork
+      (item) => item['type'] === ComponentType.OffWork,
     )
     const offWork = {
       type: ComponentType.OffWork,
@@ -206,7 +171,7 @@ const main = async () => {
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.Image
+      (item) => item['type'] === ComponentType.Image,
     )
     const image = {
       type: ComponentType.Image,
@@ -222,14 +187,14 @@ const main = async () => {
       }
       component.components[idx]['url'] = replaceJsdelivrCDN(
         component.components[idx]['url'],
-        settings
+        settings,
       )
     } else {
       component.components.push(image)
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.Countdown
+      (item) => item['type'] === ComponentType.Countdown,
     )
     const countdown = {
       type: ComponentType.Countdown,
@@ -249,14 +214,14 @@ const main = async () => {
       }
       component.components[idx]['url'] = replaceJsdelivrCDN(
         component.components[idx]['url'],
-        settings
+        settings,
       )
     } else {
       component.components.push(countdown)
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.Runtime
+      (item) => item['type'] === ComponentType.Runtime,
     )
     const runtime = {
       type: ComponentType.Runtime,
@@ -273,7 +238,7 @@ const main = async () => {
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.HTML
+      (item) => item['type'] === ComponentType.HTML,
     )
     const html = {
       type: ComponentType.HTML,
@@ -292,7 +257,7 @@ const main = async () => {
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.Holiday
+      (item) => item['type'] === ComponentType.Holiday,
     )
     const holiday = {
       type: ComponentType.Holiday,
@@ -309,7 +274,7 @@ const main = async () => {
     }
     //
     idx = component.components.findIndex(
-      (item) => item['type'] === ComponentType.News
+      (item) => item['type'] === ComponentType.News,
     )
     const news = {
       type: ComponentType.News,
@@ -497,6 +462,10 @@ const main = async () => {
     settings.appDocTitle ||= ''
     settings.gitHubCDN ||= 'gcore.jsdelivr.net'
     settings.components ||= []
+
+    settings.pwaEnable ??= false
+    settings.pwaName ??= '发现导航'
+    settings.pwaIcon ||= ''
 
     // 替换CDN
     settings.favicon = replaceJsdelivrCDN(settings.favicon, settings)

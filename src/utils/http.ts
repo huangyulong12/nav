@@ -16,6 +16,9 @@ export function getAddress(): string {
 }
 
 const isGitLab = getIsGitLab(config.gitRepoUrl)
+const gitLabBaseURL = 'https://gitlab.com/api/v4'
+const giteeBaseURL = 'https://gitee.com/api/v5'
+const gitHubBaseURL = 'https://api.github.com'
 
 function getBaseUrl() {
   const address = getAddress()
@@ -23,11 +26,20 @@ function getBaseUrl() {
     return address
   }
   if (isGitLab) {
-    return 'https://gitlab.com/api/v4'
+    return gitLabBaseURL
   } else if (getIsGitee(config.gitRepoUrl)) {
-    return 'https://gitee.com/api/v5'
+    return giteeBaseURL
   }
-  return 'https://api.github.com'
+  return gitHubBaseURL
+}
+
+export function getImageBaseUrl() {
+  if (getIsGitLab(config.imageRepoUrl)) {
+    return gitLabBaseURL
+  } else if (getIsGitee(config.imageRepoUrl)) {
+    return giteeBaseURL
+  }
+  return gitHubBaseURL
 }
 
 const httpInstance = axios.create({
@@ -47,7 +59,7 @@ httpInstance.interceptors.request.use(
   function (config) {
     const token = getToken()
     if (token) {
-      config.headers['Authorization'] = `${
+      config.headers['Authorization'] ||= `${
         isGitLab ? 'Bearer' : 'token'
       } ${token}`
     }
@@ -57,7 +69,7 @@ httpInstance.interceptors.request.use(
   function (error) {
     stopLoad()
     return Promise.reject(error)
-  }
+  },
 )
 
 httpInstance.interceptors.response.use(
@@ -79,7 +91,7 @@ httpInstance.interceptors.response.use(
     })
     stopLoad()
     return Promise.reject(error)
-  }
+  },
 )
 
 export const HTTP_BASE_URL = 'https://api.nav3.cn'
@@ -91,6 +103,7 @@ const httpNavInstance = axios.create({
 
 export function getDefaultRequestData(data?: any) {
   const code = getAuthCode()
+  const { email, language } = settings()
   return {
     code,
     hostname: location.hostname,
@@ -99,8 +112,8 @@ export function getDefaultRequestData(data?: any) {
     isLogin,
     ...config,
     ...data,
-    email: settings.email,
-    language: settings.language,
+    email,
+    language,
   } as const
 }
 
@@ -120,7 +133,7 @@ httpNavInstance.interceptors.request.use(
   function (error) {
     stopLoad()
     return Promise.reject(error)
-  }
+  },
 )
 
 httpNavInstance.interceptors.response.use(
@@ -156,7 +169,7 @@ httpNavInstance.interceptors.response.use(
 
     stopLoad()
     return Promise.reject(error)
-  }
+  },
 )
 
 export const httpNav = httpNavInstance

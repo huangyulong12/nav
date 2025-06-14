@@ -47,7 +47,7 @@ const zhCN: Record<string, any> = {
   _confirmSyncTip: isSelfDevelop
     ? ''
     : '确定将所有数据同步到远端吗？（每次保存需要等待构建完成再进行下一次操作）',
-  _syncSuccessTip: isSelfDevelop ? '同步成功' : '同步成功, 正在构建...',
+  _syncSuccessTip: isSelfDevelop ? '保存成功' : '同步成功, 正在构建...',
   _error: '错误',
   _syncFailTip: '同步失败, 请重试',
   _inputToken: '请输入TOKEN',
@@ -154,7 +154,7 @@ const zhCN: Record<string, any> = {
   _bannerHeight: 'Banner高度',
   _autoPlay: '自动轮播',
   _importBackup: '导入备份',
-  _importBackupTip: '导入后会将当前所有网站数据清空并导入',
+  _importBackupTip: '导入后会将当前所有数据清空并导入',
   _showLanguage: '显示切换语言',
   _showRate: '显示卡片评分',
   _showCopy: '显示卡片复制',
@@ -166,7 +166,6 @@ const zhCN: Record<string, any> = {
   _dragSort: '拖动可排序',
   _checkWeb:
     '上次检测出 {count} 个网站链接失效，具体到管理网站查看，如需再次检测状态直接点保存触发事件即可。',
-  _buildTip: '修改完请保存并等待构建完成，离开无效',
   _enableSEO: '开启SEO(加载稍慢)',
   _allowUser: '允许用户提交',
   _collectMenuView: `具体到用户收录菜单查看`,
@@ -271,7 +270,7 @@ const zhCN: Record<string, any> = {
   _dayOfYear: '第{day}天',
   _errCountTip:
     '上次检测出 {count} 个网站链接失效，具体到管理网站查看，如需再次检测状态直接点保存触发事件即可。',
-  _getErrorWeb: '检索所有异常网站',
+  _getErrorWeb: '检索异常网站',
   _categoryName: '分类名称',
   _dayIs: '今天是',
   _rest: '休',
@@ -321,6 +320,14 @@ const zhCN: Record<string, any> = {
   _logoDarkImg: 'Logo暗黑图',
   _errLogo: '该LOGO图无法访问',
   _logoMaxHeight: 'Logo最大高度',
+  _noPublic: '不公开',
+  _noUpdate: '没有可用更新',
+  _updating: '正在更新...',
+  _canNewVer: '有新版本可用，是否刷新以更新应用？',
+  _nowUpdate: '立即更新',
+  _later: '稍后',
+  _avaUpdate: '应用更新可用',
+  _updateFailed: '更新失败',
 }
 
 export default zhCN

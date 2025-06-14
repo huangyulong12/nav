@@ -16,15 +16,16 @@ interface TemplateData {
 }
 
 export function compilerTemplate(str: string): string {
+  const { loginViewCount, userViewCount } = internal()
   const data: TemplateData = {
-    total: isLogin ? internal.loginViewCount : internal.userViewCount,
+    total: isLogin ? loginViewCount : userViewCount,
     hostname: window.location.hostname,
     year: new Date().getFullYear(),
   }
 
   return Object.entries(data).reduce(
     (result, [key, value]) => result.replaceAll(`\${${key}}`, String(value)),
-    str
+    str,
   )
 }
 

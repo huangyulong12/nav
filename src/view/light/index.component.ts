@@ -57,7 +57,7 @@ export default class LightComponent {
   constructor(public commonService: CommonService) {}
 
   get isEllipsis() {
-    return this.commonService.settings.lightOverType === 'ellipsis'
+    return this.commonService.settings().lightOverType === 'ellipsis'
   }
 
   ngOnInit() {
@@ -78,7 +78,7 @@ export default class LightComponent {
         this.items.toArray()[this.commonService.oneIndex].nativeElement,
         {
           behavior: 'auto',
-        }
+        },
       )
     }
 

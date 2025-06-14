@@ -9,6 +9,7 @@ import {
   setDefaultSearchEngine,
   queryString,
   isDark,
+  isMobile,
 } from 'src/utils'
 import { Router, ActivatedRoute } from '@angular/router'
 import { search } from 'src/store'
@@ -38,24 +39,30 @@ import event from 'src/utils/mitt'
 })
 export class SearchComponent {
   @ViewChild('input', { static: false }) input!: ElementRef
-  @Input() size: 'small' | 'default' | 'large' = 'default'
+  @Input() size: 'small' | 'default' | 'large' = 'large'
   @Input() showLogo = true
 
   readonly $t = $t
   readonly isLogin = isLogin
   readonly SearchType = SearchType
-  readonly searchEngineList: ISearchItemProps[] = search.list.filter(
-    (item) => !item.blocked
+  readonly searchEngineList: ISearchItemProps[] = search().list.filter(
+    (item) => !item.blocked,
   )
-  readonly search = search
+  readonly search = search()
+  readonly isMobile = isMobile()
   isDark = isDark()
   currentEngine: ISearchItemProps = getDefaultSearchEngine()
   searchTypeValue = Number(queryString()['type']) || SearchType.All
   keyword = queryString().q
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+  ) {
     event.on('SEARCH_FOCUS', () => {
-      this.inputFocus()
+      if (!this.isMobile) {
+        this.inputFocus()
+      }
     })
     if (!this.isLogin && this.searchTypeValue === SearchType.Id) {
       this.searchTypeValue = SearchType.All
@@ -66,9 +73,8 @@ export class SearchComponent {
   }
 
   get logoImage() {
-    return this.isDark
-      ? search.darkLogo || search.logo
-      : search.logo || search.darkLogo
+    const { darkLogo, logo } = search()
+    return this.isDark ? darkLogo || logo : logo || darkLogo
   }
 
   private inputFocus() {
@@ -78,7 +84,9 @@ export class SearchComponent {
   }
 
   ngAfterViewInit() {
-    this.inputFocus()
+    if (!this.isMobile) {
+      this.inputFocus()
+    }
   }
 
   onSelectChange() {
@@ -113,6 +121,10 @@ export class SearchComponent {
         _: Date.now(),
       },
     })
+
+    if (this.isMobile) {
+      this.input?.nativeElement?.blur()
+    }
   }
 
   onKey(event: KeyboardEvent) {
